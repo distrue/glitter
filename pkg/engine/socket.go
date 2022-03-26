@@ -8,23 +8,23 @@ import (
 	"net/http"
 )
 
-type SocketConn struct {
+type Socket struct {
 	Sid        string
 	OnMessage  func(msg string)
 	Send       func(msg string) error
 }
 
-func New(w http.ResponseWriter, r *http.Request) *SocketConn {
-	conn := &SocketConn{
+func New(w http.ResponseWriter, r *http.Request) *Socket {
+	conn := &Socket{
 		Sid:       util.RandomSid(),
 		OnMessage: func(msg string) {},
 	}
-	conn.CreateWebSocketConn(w, r)
+	conn.connectWebSocket(w, r)
 
 	return conn
 }
 
-func (c *SocketConn) CreateWebSocketConn(w http.ResponseWriter, r *http.Request) {
+func (c *Socket) connectWebSocket(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	upgrader := websocket.Upgrader{
@@ -52,39 +52,15 @@ func (c *SocketConn) CreateWebSocketConn(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (c *SocketConn) webSocketListener(cancel context.CancelFunc, conn *websocket.Conn) {
+func (c *Socket) webSocketListener(cancel context.CancelFunc, conn *websocket.Conn) {
 	closeMe := false
 	for !closeMe {
-		/*
-			const (
-				// TextMessage denotes a text data message. The text message payload is
-				// interpreted as UTF-8 encoded text data.
-				TextMessage = 1
-
-				// BinaryMessage denotes a binary data message.
-				BinaryMessage = 2
-
-				// CloseMessage denotes a close control message. The optional message
-				// payload contains a numeric code and text. Use the FormatCloseMessage
-				// function to format a close message payload.
-				CloseMessage = 8
-
-				// PingMessage denotes a ping control message. The optional message payload
-				// is UTF-8 encoded text.
-				PingMessage = 9
-
-				// PongMessage denotes a pong control message. The optional message payload
-				// is UTF-8 encoded text.
-				PongMessage = 10
-			)
-		*/
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		// TODO: consider multiple types on messageType
 		if messageType != 1 {
 			continue
 		}
@@ -107,3 +83,26 @@ func (c *SocketConn) webSocketListener(cancel context.CancelFunc, conn *websocke
 	}
 	cancel()
 }
+
+// TODO: consider multiple types on websocket messageType
+const (
+	// TextMessage denotes a text data message. The text message payload is
+	// interpreted as UTF-8 encoded text data.
+	TextMessage = 1
+
+	// BinaryMessage denotes a binary data message.
+	BinaryMessage = 2
+
+	// CloseMessage denotes a close control message. The optional message
+	// payload contains a numeric code and text. Use the FormatCloseMessage
+	// function to format a close message payload.
+	CloseMessage = 8
+
+	// PingMessage denotes a ping control message. The optional message payload
+	// is UTF-8 encoded text.
+	PingMessage = 9
+
+	// PongMessage denotes a pong control message. The optional message payload
+	// is UTF-8 encoded text.
+	PongMessage = 10
+)

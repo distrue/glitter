@@ -7,11 +7,12 @@ import (
 )
 
 func main() {
-	var connMap map[string]*engine.SocketConn
-	onConnection := func(conn *engine.SocketConn) {
+	var connMap map[string]*engine.Socket
+	onConnection := func(socket *engine.Socket) {
 		fmt.Println("connection is created")
 	}
 
+	// engine attach example
 	mux := http.NewServeMux()
 	mux.Handle("/engine.io/", engine.Handler(connMap, onConnection))
 

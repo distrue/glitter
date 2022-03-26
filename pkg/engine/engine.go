@@ -12,7 +12,7 @@ type HandShake struct {
 	PingInterval int      `json:"pingInterval"`
 }
 
-func Handler(connMap map[string]*SocketConn, onConnection func(conn *SocketConn)) http.HandlerFunc {
+func Handler(connMap map[string]*Socket, onConnection func(conn *Socket)) http.HandlerFunc {
 	// only support websocket connection initiation; doest not support sending message
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -27,10 +27,10 @@ func Handler(connMap map[string]*SocketConn, onConnection func(conn *SocketConn)
 
 			transport := query.Get("transport")
 			if transport == "websocket" {
-				socketConn := New(w, r)
-				connMap[socketConn.Sid] = socketConn
-				onConnection(socketConn)
-				// TODO: remove SocketConn from connMap on close channel
+				socket := New(w, r)
+				connMap[socket.Sid] = socket
+				onConnection(socket)
+				// TODO: remove Socket from connMap on close channel
 			}
 
 			// open
@@ -70,9 +70,9 @@ func Handler(connMap map[string]*SocketConn, onConnection func(conn *SocketConn)
 					w.Write([]byte("ok"))
 				},
 				func() {
-					socketConn := New(w, r)
-					connMap[socketConn.Sid] = socketConn
-					onConnection(socketConn)
+					socket := New(w, r)
+					connMap[socket.Sid] = socket
+					onConnection(socket)
 				},
 			)
 		}
